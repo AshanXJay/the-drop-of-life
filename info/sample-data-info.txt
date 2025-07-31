@@ -1,12 +1,94 @@
 # 🩸 The Drop of Life - Sample Data Documentation
 
 ## Overview
-This document provides an overview of the sample data included in the database for testing and development purposes.
+This document provides an overview of the database structure and sample data included for testing and development purposes.
 
 ## Files
 - `schema.sql` - Database structure (tables, relationships)
 - `sample-data.sql` - Sample data for testing
 - `sample-data-info.txt` - This documentation file
+
+---
+
+## 🗄️ Database Schema
+
+### Table Structure Overview
+The database consists of 4 main tables with the following relationships:
+- **donors** ↔ **camp_registrations** ↔ **camps** (Many-to-Many)
+- **donors** → **emergency_requests** (One-to-Many, optional)
+
+### 📋 1. DONORS Table
+**Purpose**: Store blood donor information and contact details
+
+| Attribute | Data Type | Constraints | Description |
+|-----------|-----------|-------------|-------------|
+| `donor_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique donor identifier |
+| `name` | VARCHAR(100) | NOT NULL | Full name of the donor |
+| `email` | VARCHAR(100) | NOT NULL, UNIQUE | Email address (unique constraint) |
+| `phone` | VARCHAR(20) | NULL | Phone number (optional) |
+| `blood_type` | VARCHAR(5) | NULL | Blood type (A+, A-, B+, B-, AB+, AB-, O+, O-) |
+| `district` | VARCHAR(100) | NULL | Geographic district in Sri Lanka |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Registration timestamp |
+
+### 🏥 2. CAMPS Table
+**Purpose**: Store blood donation camp/drive information
+
+| Attribute | Data Type | Constraints | Description |
+|-----------|-----------|-------------|-------------|
+| `camp_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique camp identifier |
+| `name` | VARCHAR(100) | NOT NULL | Name of the blood camp |
+| `location` | VARCHAR(100) | NOT NULL | Physical location/venue |
+| `district` | VARCHAR(100) | NULL | District where camp is held |
+| `date` | DATE | NOT NULL | Date of the blood camp |
+| `time` | TIME | NOT NULL | Start time of the camp |
+| `organizer` | VARCHAR(100) | NULL | Organizing body/institution |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Camp creation timestamp |
+
+### 📝 3. CAMP_REGISTRATIONS Table
+**Purpose**: Many-to-many relationship between donors and camps
+
+| Attribute | Data Type | Constraints | Description |
+|-----------|-----------|-------------|-------------|
+| `registration_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique registration identifier |
+| `donor_id` | INT | FOREIGN KEY | References donors(donor_id) |
+| `camp_id` | INT | FOREIGN KEY | References camps(camp_id) |
+| `registered_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Registration timestamp |
+
+**Foreign Key Constraints**:
+- `donor_id` → `donors(donor_id)` ON DELETE CASCADE
+- `camp_id` → `camps(camp_id)` ON DELETE CASCADE
+
+### 🚨 4. EMERGENCY_REQUESTS Table
+**Purpose**: Store urgent blood requirement requests
+
+| Attribute | Data Type | Constraints | Description |
+|-----------|-----------|-------------|-------------|
+| `request_id` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique request identifier |
+| `donor_id` | INT | FOREIGN KEY, NULL | Optional reference to specific donor |
+| `blood_type` | VARCHAR(5) | NOT NULL | Required blood type |
+| `location` | VARCHAR(100) | NULL | Hospital/location needing blood |
+| `contact` | VARCHAR(50) | NULL | Contact information |
+| `note` | TEXT | NULL | Additional details about the emergency |
+| `requested_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Request timestamp |
+
+**Foreign Key Constraints**:
+- `donor_id` → `donors(donor_id)` ON DELETE SET NULL
+
+### 🔗 Relationships Summary
+1. **Donors ↔ Camps**: Many-to-Many (via camp_registrations)
+   - One donor can register for multiple camps
+   - One camp can have multiple donors registered
+
+2. **Donors → Emergency Requests**: One-to-Many (Optional)
+   - One donor can be linked to multiple emergency requests
+   - Emergency requests can exist without specific donor links
+
+3. **Data Integrity**: 
+   - Cascading deletes for camp registrations
+   - Null assignment for emergency requests when donor is deleted
+   - Unique email constraint prevents duplicate donor registrations
+
+---
 
 ## Sample Data Summary
 
