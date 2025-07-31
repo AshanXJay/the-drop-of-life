@@ -1,0 +1,169 @@
+# 🩸 The Drop of Life - Sample Data Documentation
+
+## Overview
+This document provides an overview of the sample data included in the database for testing and development purposes.
+
+## Files
+- `schema.sql` - Database structure (tables, relationships)
+- `sample-data.sql` - Sample data for testing
+- `sample-data-info.txt` - This documentation file
+
+## Sample Data Summary
+
+### 📊 Total Records
+- **Donors**: 15 records
+- **Camps**: 10 records  
+- **Camp Registrations**: 32 records
+- **Emergency Requests**: 10 records
+
+---
+
+## 🩸 DONORS Table (15 records)
+
+### Blood Type Distribution:
+- **O+**: 3 donors (Ashan, Sachini, Chaminda)
+- **A+**: 2 donors (Nimali, Dinesh)
+- **B+**: 2 donors (Kasun, Malika)
+- **AB+**: 2 donors (Sanduni, Sampath)
+- **O-**: 2 donors (Thilaka, Nayomi)
+- **A-**: 2 donors (Priyantha, Dilani)
+- **B-**: 1 donor (Chamari)
+- **AB-**: 1 donor (Ruwan)
+
+### Geographic Distribution:
+- Colombo, Kandy, Gampaha, Kurunegala, Matara
+- Anuradhapura, Ratnapura, Badulla, Galle, Jaffna
+- Polonnaruwa, Hambantota, Kalutara, Kegalle, Nuwara Eliya
+
+### Sample Donors:
+1. Ashan Jayawardana (O+, Colombo)
+2. Nimali Perera (A+, Kandy)
+3. Kasun Silva (B+, Gampaha)
+4. Sanduni Fernando (AB+, Kurunegala)
+5. Thilaka Rajapaksa (O-, Matara)
+... and 10 more
+
+---
+
+## 🏥 CAMPS Table (10 records)
+
+### Camp Types:
+- **Hospital-based**: National Hospital, Teaching Hospitals, Base Hospitals
+- **Community**: University, Corporate, School, Temple
+- **Geographic**: Urban and rural areas across Sri Lanka
+
+### Scheduled Dates:
+- August 2025: 3 camps
+- September 2025: 6 camps  
+- October 2025: 1 camp
+
+### Sample Camps:
+1. Blood Drive 2025 - Colombo (Aug 15, National Hospital)
+2. Life Saver Camp - Kandy (Aug 20, Teaching Hospital)
+3. Emergency Blood Collection (Aug 25, Base Hospital Gampaha)
+4. Community Blood Drive (Sep 1, District Hospital Kurunegala)
+5. University Blood Camp (Sep 5, University of Peradeniya)
+... and 5 more
+
+### Organizers:
+- Red Cross Society
+- Lions Club Kandy
+- Blood Bank Gampaha
+- Rotary Club
+- Medical Faculty
+- Dialog CSR Team
+- Old Boys Association
+- Temple Committee
+- Medical Associations
+
+---
+
+## 📝 CAMP_REGISTRATIONS Table (32 records)
+
+### Registration Pattern:
+- **Most Popular**: University Blood Camp (5 registrations)
+- **Moderate**: Colombo Blood Drive (5 registrations)
+- **Average**: 3-4 registrations per camp
+- **Multi-camp donors**: Some donors registered for multiple camps
+
+### Donor Participation:
+- Donor #1 (Ashan): 3 camps
+- Donor #2 (Nimali): 3 camps
+- Donor #3 (Kasun): 3 camps
+- Others: 1-2 camps each
+
+### Registration Timeline:
+- July 25-29, 2025 (varied timestamps for realism)
+
+---
+
+## 🚨 EMERGENCY_REQUESTS Table (10 records)
+
+### Request Types:
+- **Anonymous requests**: 5 requests (no specific donor)
+- **Donor-linked requests**: 5 requests (family/registered donors)
+
+### Blood Types Needed:
+- **O-**: Universal donor emergency
+- **A+**: Surgery cases
+- **B+**: Thalassemia patient
+- **AB+**: Pediatric emergency
+- **AB-**: Very rare type emergency
+- **A-**: Cancer patient support
+- **B-**: Pregnancy complications
+
+### Hospital Locations:
+1. National Hospital Colombo (O- emergency)
+2. Teaching Hospital Kandy (A+ surgery)
+3. Colombo South Teaching Hospital (B+ thalassemia)
+4. Lady Ridgeway Hospital (AB+ pediatric)
+5. Base Hospital Gampaha (O+ accident)
+6. Teaching Hospital Peradeniya (A- cancer)
+7. General Hospital Ratnapura (B- pregnancy)
+8. Base Hospital Matara (O+ surgery)
+9. Teaching Hospital Jaffna (AB- rare type)
+10. District General Hospital Badulla (A+ dengue)
+
+### Urgency Levels:
+- **Critical**: Recent requests (July 31)
+- **Urgent**: 1-2 days ago
+- **Ongoing**: 2-3 days ago
+
+---
+
+## 🔧 Development Usage
+
+### Testing Scenarios:
+1. **Search by blood type**: Test with all 8 blood types
+2. **Camp registration**: Test with existing camps
+3. **Emergency responses**: Test urgent request handling
+4. **Donor management**: Test CRUD operations
+5. **Geographic filtering**: Test by districts
+6. **Date-based queries**: Test upcoming vs past camps
+
+### Database Queries:
+```sql
+-- Find O- donors for emergency
+SELECT * FROM donors WHERE blood_type = 'O-';
+
+-- Most popular camps
+SELECT c.name, COUNT(cr.registration_id) as registrations
+FROM camps c LEFT JOIN camp_registrations cr ON c.camp_id = cr.camp_id
+GROUP BY c.camp_id ORDER BY registrations DESC;
+
+-- Recent emergency requests
+SELECT * FROM emergency_requests 
+WHERE requested_at >= '2025-07-30' 
+ORDER BY requested_at DESC;
+```
+
+### Security Testing:
+- All emails are unique (constraint testing)
+- Foreign key relationships work properly
+- Null values handled correctly in emergency requests
+- Timestamps maintain proper chronology
+
+---
+
+
+*This sample data is for development and testing purposes only.*
