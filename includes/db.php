@@ -54,14 +54,8 @@ class Database {
                 // Enable prepared statement emulation for better security
                 PDO::ATTR_EMULATE_PREPARES => false,
                 
-                // Set error mode to exceptions for better error handling
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                
                 // Set default fetch mode to associative array
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                
-                // Disable persistent connections for security
-                PDO::ATTR_PERSISTENT => false
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
             ];
             
             // Create DSN (Data Source Name)
