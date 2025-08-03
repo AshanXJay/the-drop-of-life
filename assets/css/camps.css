@@ -1,0 +1,393 @@
+/* camps.css - Styles for the public camps listing page */
+
+/* Container and Layout */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 50px;
+    padding-bottom: 30px;
+}
+
+.page-header h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 2.8rem;
+    font-weight: 700;
+}
+
+.page-header p {
+    color: #7f8c8d;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* No Camps State */
+.no-camps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 20px;
+    margin: 40px 0;
+}
+
+.no-camps-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 500px;
+}
+
+.no-camps-content h3 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.no-camps-content p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.no-camps-content a {
+    color: #e74c3c;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.3s;
+}
+
+.no-camps-content a:hover {
+    border-bottom-color: #e74c3c;
+}
+
+/* Camps Container */
+.camps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-bottom: 60px;
+}
+
+/* Camp Cards */
+.camp-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.camp-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    border-color: #e74c3c;
+}
+
+/* Camp Status Badge */
+.camp-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.camp-status.upcoming {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.camp-status.active {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.camp-status.completed {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Camp Content */
+.camp-content {
+    padding: 30px;
+}
+
+.camp-name {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    margin-top: 0;
+    line-height: 1.3;
+}
+
+/* Camp Details */
+.camp-details {
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 12px;
+}
+
+.detail-item .icon {
+    font-size: 18px;
+    width: 24px;
+    flex-shrink: 0;
+}
+
+.detail-item .label {
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.detail-item .value {
+    color: #555;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.detail-item.description {
+    align-items: flex-start;
+}
+
+.detail-item.description .value {
+    margin-top: 2px;
+}
+
+/* Camp Actions */
+.camp-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 140px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #7f8c8d;
+    border: 2px solid #bdc3c7;
+}
+
+.btn-secondary:hover {
+    background: #bdc3c7;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(189, 195, 199, 0.3);
+}
+
+.btn-large {
+    padding: 16px 32px;
+    font-size: 18px;
+    min-width: 200px;
+}
+
+/* Call to Action Section */
+.call-to-action {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 50px;
+    border-radius: 20px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+.call-to-action h3 {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.call-to-action p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.call-to-action .btn {
+    background: white;
+    color: #e74c3c;
+    border: 2px solid white;
+}
+
+.call-to-action .btn:hover {
+    background: transparent;
+    color: white;
+    border-color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .page-header h2 {
+        font-size: 2.2rem;
+    }
+    
+    .page-header p {
+        font-size: 1.1rem;
+    }
+    
+    .camps-container {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .camp-card {
+        margin: 0 10px;
+    }
+    
+    .camp-content {
+        padding: 25px;
+    }
+    
+    .camp-name {
+        font-size: 1.5rem;
+    }
+    
+    .camp-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        min-width: auto;
+    }
+    
+    .call-to-action {
+        padding: 40px 30px;
+        margin: 40px 10px 20px;
+    }
+    
+    .call-to-action h3 {
+        font-size: 1.8rem;
+    }
+    
+    .call-to-action p {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .camp-status {
+        top: 15px;
+        right: 15px;
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .camp-content {
+        padding: 20px;
+    }
+    
+    .detail-item {
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+    
+    .detail-item .label {
+        min-width: 70px;
+        font-size: 14px;
+    }
+    
+    .detail-item .value {
+        font-size: 14px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .call-to-action {
+        padding: 30px 20px;
+    }
+}
+
+/* Loading states and animations */
+.camp-card {
+    animation: fadeInUp 0.6s ease;
+}
+
+.camp-card:nth-child(1) { animation-delay: 0.1s; }
+.camp-card:nth-child(2) { animation-delay: 0.2s; }
+.camp-card:nth-child(3) { animation-delay: 0.3s; }
+.camp-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus styles for accessibility */
+.btn:focus {
+    outline: 3px solid rgba(231, 76, 60, 0.3);
+    outline-offset: 2px;
+}
