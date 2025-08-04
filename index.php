@@ -1,4 +1,5 @@
 <!-- index.php -->
+
 <?php include 'includes/header.php'; ?>
 <section class="hero">
     <div class="container">
