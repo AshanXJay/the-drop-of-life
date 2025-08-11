@@ -2,23 +2,63 @@
 // donor-profile.php
 include 'includes/header.php';
 
-// Handle profile picture upload
-$profilePic = 'assets/img/default-profile.png'; // Placeholder image
+// ---------------- Database Connection ----------------
+session_start();
+$servername = "localhost";
+$username   = "root";          // adjust as needed
+$password   = "";
+$dbname     = "the_drop_of_life";
+
+try {
+    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// ------------------------------------------------------
+// Determine donor ID (demo defaults to 1). In production, use login/session.
+if (!isset($_SESSION['donor_id'])) {
+    $_SESSION['donor_id'] = 1; // demo donor
+}
+$donor_id = (int) $_SESSION['donor_id'];
+
+// ---------------- Profile Picture Upload -------------
+$profilePic = 'assets/img/default-profile.png';
 if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == 0) {
     $targetDir = "uploads/";
     if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
     $targetFile = $targetDir . basename($_FILES["profile_pic"]["name"]);
     if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $targetFile)) {
         $profilePic = $targetFile;
+        // OPTIONAL: save $profilePic to DB if you add a column for it
     }
 }
 
-// Handle profile update (static example, not saved to DB)
-$name = $_POST['name'] ?? 'John Doe';
-$email = $_POST['email'] ?? 'john@example.com';
-$blood = $_POST['blood'] ?? 'O+';
-$phone = $_POST['phone'] ?? '123-456-7890';
-$address = $_POST['address'] ?? '123 Main St, City, Country';
+// ---------------- Handle Update ----------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
+    $stmt = $pdo->prepare("UPDATE donors SET name=:name, email=:email, phone=:phone, blood_type=:blood, district=:district WHERE donor_id=:id");
+    $stmt->execute([
+        ':name'     => $_POST['name'],
+        ':email'    => $_POST['email'],
+        ':phone'    => $_POST['phone'],
+        ':blood'    => $_POST['blood'],
+        ':district' => $_POST['address'],
+        ':id'       => $donor_id
+    ]);
+}
+
+// ---------------- Fetch Donor Details ----------------
+$name = $email = $blood = $phone = $address = '';
+$stmt = $pdo->prepare("SELECT * FROM donors WHERE donor_id = :id LIMIT 1");
+$stmt->execute([':id' => $donor_id]);
+if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $name    = $row['name'];
+    $email   = $row['email'];
+    $blood   = $row['blood_type'];
+    $phone   = $row['phone'];
+    $address = $row['district'];
+}
 
 ?>
 
