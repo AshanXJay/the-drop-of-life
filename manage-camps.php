@@ -1,121 +1,196 @@
-
-
 <?php
-require_once __DIR__ . '/includes/header.php';
-require_once __DIR__ . '/includes/db.php';
+require_once 'includes/db.php';
+include 'includes/header.php';
 
 $action = $_POST['action'] ?? '';
 $message = '';
 
-$fields = [
-    'name' => $_POST['name'] ?? '',
-    'date' => $_POST['date'] ?? '',
-    'time' => $_POST['time'] ?? '',
-    'location' => $_POST['location'] ?? '',
-    'district' => $_POST['district'] ?? '',
-    'organizer' => $_POST['organizer'] ?? ''
-];
-
-$pdo = Database::getConnection();
-
 if ($action === 'add') {
-    $sql = "INSERT INTO camps (name, date, time, location, district, organizer) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
-    if ($stmt->execute(array_values($fields))) {
-        $message = 'Camp added successfully!';
-    } else {
-        $message = 'Failed to add camp.';
-    }
-}
+    $name = $_POST['name'] ?? '';
+    $date = $_POST['date'] ?? '';
+    $time = $_POST['time'] ?? '';
+    $location = $_POST['location'] ?? '';
+    $district = $_POST['district'] ?? '';
+    $organizer = $_POST['organizer'] ?? '';
+    $contact_number = $_POST['contact_number'] ?? '';
 
-if ($action === 'edit' && isset($_POST['camp_id'])) {
-    $sql = "UPDATE camps SET name=?, date=?, time=?, location=?, district=?, organizer=? WHERE camp_id=?";
-    $stmt = $pdo->prepare($sql);
-    if ($stmt->execute([...array_values($fields), $_POST['camp_id']])) {
-        $message = 'Camp updated successfully!';
-    } else {
-        $message = 'Failed to update camp.';
+    try {
+        $db = Database::getInstance()->getConnection();
+        $sql = "INSERT INTO camps (name, date, time, location, district, organizer, contact_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $db->prepare($sql);
+        if ($stmt->execute([$name, $date, $time, $location, $district, $organizer, $contact_number])) {
+            $message = '<div class="alert alert--success">Camp added successfully!</div>';
+        } else {
+            $message = '<div class="alert alert--danger">Failed to add camp.</div>';
+        }
+    } catch (Exception $e) {
+        $message = '<div class="alert alert--danger">Error: ' . $e->getMessage() . '</div>';
     }
 }
 
 if ($action === 'delete' && isset($_POST['camp_id'])) {
-    $sql = "DELETE FROM camps WHERE camp_id=?";
-    $stmt = $pdo->prepare($sql);
-    if ($stmt->execute([$_POST['camp_id']])) {
-        $message = 'Camp deleted successfully!';
-    } else {
-        $message = 'Failed to delete camp.';
+    try {
+        $db = Database::getInstance()->getConnection();
+        $sql = "DELETE FROM camps WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        if ($stmt->execute([$_POST['camp_id']])) {
+            $message = '<div class="alert alert--success">Camp deleted successfully!</div>';
+        } else {
+            $message = '<div class="alert alert--danger">Failed to delete camp.</div>';
+        }
+    } catch (Exception $e) {
+        $message = '<div class="alert alert--danger">Error: ' . $e->getMessage() . '</div>';
     }
 }
 
-$stmt = $pdo->query("SELECT * FROM camps ORDER BY date DESC, time DESC");
-$camps = $stmt->fetchAll();
+// Fetch all camps
+try {
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->query("SELECT * FROM camps ORDER BY date DESC");
+    $camps = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $camps = [];
+    $message = '<div class="alert alert--danger">Error fetching camps: ' . $e->getMessage() . '</div>';
+}
 ?>
 
-<link rel="stylesheet" href="home.css">
-<main class="manage-camps-main" style="max-width:900px;margin:40px auto;">
-    <h2 style="color:#d32f2f;margin-bottom:24px;">Manage Camps</h2>
-    <?php if (isset($message) && $message): ?>
-        <div style="padding:10px 0;color:#d32f2f;font-weight:600;"> <?= htmlspecialchars($message) ?> </div>
-    <?php endif; ?>
-    <form method="POST" class="filter-form" style="margin-bottom:32px;">
-        <input type="hidden" name="action" value="add">
-        <div class="filter-grid">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" name="name" required placeholder="Camp Name" pattern=".{3,}" title="At least 3 characters">
+<div class="container">
+    <h1 class="page-title">Manage Blood Camps</h1>
+    <p class="page-subtitle">Add, edit, and manage blood donation camps</p>
+
+    <?= $message ?>
+
+    <!-- Add New Camp -->
+    <div class="card">
+        <h2 class="card__title">Add New Camp</h2>
+        <form method="POST" action="">
+            <input type="hidden" name="action" value="add">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="name">Camp Name</label>
+                    <input type="text" class="form-control" name="name" id="name" required 
+                           placeholder="Blood Donation Drive">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="organizer">Organizer</label>
+                    <input type="text" class="form-control" name="organizer" id="organizer" required 
+                           placeholder="Red Cross Society">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" name="date" required>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="date">Date</label>
+                    <input type="date" class="form-control" name="date" id="date" required 
+                           min="<?= date('Y-m-d') ?>">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="time">Time</label>
+                    <input type="time" class="form-control" name="time" id="time" required>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="time">Time</label>
-                <input type="text" name="time" required placeholder="HH:MM" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" title="Format HH:MM">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="location">Location</label>
+                    <input type="text" class="form-control" name="location" id="location" required 
+                           placeholder="Community Center, Main Street">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="district">District</label>
+                    <select class="form-control" name="district" id="district" required>
+                        <option value="">Select District</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Jaffna">Jaffna</option>
+                        <option value="Batticaloa">Batticaloa</option>
+                    </select>
+                </div>
             </div>
+
             <div class="form-group">
-                <label for="location">Location</label>
-                <input type="text" name="location" required placeholder="Location" pattern=".{3,}" title="At least 3 characters">
+                <label class="form-label" for="contact_number">Contact Number</label>
+                <input type="tel" class="form-control" name="contact_number" id="contact_number" required 
+                       placeholder="+94 71 234 5678">
             </div>
-            <div class="form-group">
-                <label for="district">District</label>
-                <input type="text" name="district" required placeholder="District" pattern=".{3,}" title="At least 3 characters">
+
+            <button type="submit" class="btn btn--primary">Add Camp</button>
+        </form>
+    </div>
+
+    <!-- Existing Camps -->
+    <div class="card">
+        <h2 class="card__title">Existing Camps</h2>
+        
+        <?php if (empty($camps)): ?>
+            <p class="text-center">No camps found. Add your first camp above.</p>
+        <?php else: ?>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Location</th>
+                            <th>District</th>
+                            <th>Organizer</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($camps as $camp): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($camp['name']) ?></td>
+                                <td><?= date('M j, Y', strtotime($camp['date'])) ?></td>
+                                <td><?= date('g:i A', strtotime($camp['time'])) ?></td>
+                                <td><?= htmlspecialchars($camp['location']) ?></td>
+                                <td><?= htmlspecialchars($camp['district']) ?></td>
+                                <td><?= htmlspecialchars($camp['organizer']) ?></td>
+                                <td><?= htmlspecialchars($camp['contact_number']) ?></td>
+                                <td>
+                                    <form method="POST" style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete this camp?')">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="camp_id" value="<?= $camp['id'] ?>">
+                                        <button type="submit" class="btn btn--secondary btn--sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-            <div class="form-group">
-                <label for="organizer">Organizer</label>
-                <input type="text" name="organizer" required placeholder="Organizer" pattern=".{3,}" title="At least 3 characters">
+        <?php endif; ?>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card">
+        <h2 class="card__title">Camp Management Guidelines</h2>
+        <div class="form-row">
+            <div>
+                <h3>📝 Adding Camps</h3>
+                <ul>
+                    <li>Ensure all required fields are filled</li>
+                    <li>Set realistic dates and times</li>
+                    <li>Provide clear location details</li>
+                    <li>Include working contact number</li>
+                </ul>
+            </div>
+            <div>
+                <h3>🎯 Best Practices</h3>
+                <ul>
+                    <li>Schedule camps at accessible locations</li>
+                    <li>Allow 4-6 hours for camp duration</li>
+                    <li>Coordinate with local health authorities</li>
+                    <li>Promote camps 2-3 weeks in advance</li>
+                </ul>
             </div>
         </div>
-        <button type="submit" class="search-btn" style="margin-top:18px;">Add Camp</button>
-    </form>
-    <h3 style="margin-bottom:18px;">Existing Camps</h3>
-    <div style="overflow-x:auto;">
-    <table class="manage-camps-table" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);overflow:hidden;">
-        <thead style="background:#d32f2f;color:#fff;">
-            <tr>
-                <th>Name</th><th>Date</th><th>Time</th><th>Location</th><th>District</th><th>Organizer</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($camps as $camp): ?>
-            <tr>
-                <form method="POST">
-                    <td><input type="text" name="name" value="<?= htmlspecialchars($camp['name']) ?>" required pattern=".{3,}" title="At least 3 characters"></td>
-                    <td><input type="date" name="date" value="<?= htmlspecialchars($camp['date']) ?>" required></td>
-                    <td><input type="text" name="time" value="<?= htmlspecialchars($camp['time']) ?>" required pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" title="Format HH:MM"></td>
-                    <td><input type="text" name="location" value="<?= htmlspecialchars($camp['location']) ?>" required pattern=".{3,}" title="At least 3 characters"></td>
-                    <td><input type="text" name="district" value="<?= htmlspecialchars($camp['district']) ?>" required pattern=".{3,}" title="At least 3 characters"></td>
-                    <td><input type="text" name="organizer" value="<?= htmlspecialchars($camp['organizer']) ?>" required pattern=".{3,}" title="At least 3 characters"></td>
-                    <td style="white-space:nowrap;">
-                        <input type="hidden" name="camp_id" value="<?= $camp['camp_id'] ?>">
-                        <button type="submit" name="action" value="edit" class="search-btn" style="background:#1976d2;margin-right:6px;">Edit</button>
-                        <button type="submit" name="action" value="delete" class="search-btn" style="background:#d32f2f;" onclick="return confirm('Delete this camp?')">Delete</button>
-                    </td>
-                </form>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
     </div>
-</main>
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+</div>
+
+<?php include 'includes/footer.php'; ?>

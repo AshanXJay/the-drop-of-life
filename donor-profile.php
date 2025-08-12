@@ -1,147 +1,214 @@
 <?php
-// donor-profile.php
+require_once 'includes/db.php';
 include 'includes/header.php';
 
-// ---------------- Database Connection ----------------
+// Start session for donor authentication (demo mode)
 session_start();
-$servername = "localhost";
-$username   = "root";          // adjust as needed
-$password   = "";
-$dbname     = "the_drop_of_life";
 
-try {
-    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-}
-
-// ------------------------------------------------------
-// Determine donor ID (demo defaults to 1). In production, use login/session.
+// Demo donor ID - in production, use proper login/session
 if (!isset($_SESSION['donor_id'])) {
-    $_SESSION['donor_id'] = 1; // demo donor
+    $_SESSION['donor_id'] = 1;
 }
 $donor_id = (int) $_SESSION['donor_id'];
 
-// ---------------- Profile Picture Upload -------------
-$profilePic = 'assets/img/default-profile.png';
-if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == 0) {
-    $targetDir = "uploads/";
-    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-    $targetFile = $targetDir . basename($_FILES["profile_pic"]["name"]);
-    if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $targetFile)) {
-        $profilePic = $targetFile;
-        // OPTIONAL: save $profilePic to DB if you add a column for it
+$message = '';
+
+// Handle profile update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    $name = $_POST['name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $blood_type = $_POST['blood_type'] ?? '';
+    $district = $_POST['district'] ?? '';
+    
+    if (empty($name) || empty($email) || empty($phone) || empty($blood_type) || empty($district)) {
+        $message = '<div class="alert alert--danger">All fields are required.</div>';
+    } else {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $sql = "UPDATE donors SET name=?, email=?, phone=?, blood_type=?, district=? WHERE donor_id=?";
+            $stmt = $db->prepare($sql);
+            if ($stmt->execute([$name, $email, $phone, $blood_type, $district, $donor_id])) {
+                $message = '<div class="alert alert--success">Profile updated successfully!</div>';
+            } else {
+                $message = '<div class="alert alert--danger">Update failed. Please try again.</div>';
+            }
+        } catch (Exception $e) {
+            $message = '<div class="alert alert--danger">Error: ' . $e->getMessage() . '</div>';
+        }
     }
 }
 
-// ---------------- Handle Update ----------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
-    $stmt = $pdo->prepare("UPDATE donors SET name=:name, email=:email, phone=:phone, blood_type=:blood, district=:district WHERE donor_id=:id");
-    $stmt->execute([
-        ':name'     => $_POST['name'],
-        ':email'    => $_POST['email'],
-        ':phone'    => $_POST['phone'],
-        ':blood'    => $_POST['blood'],
-        ':district' => $_POST['address'],
-        ':id'       => $donor_id
-    ]);
+// Fetch donor details
+try {
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("SELECT * FROM donors WHERE donor_id = ?");
+    $stmt->execute([$donor_id]);
+    $donor = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$donor) {
+        // Create demo donor if not exists
+        $sql = "INSERT INTO donors (donor_id, name, email, phone, blood_type, district, registration_date) 
+                VALUES (?, 'Demo User', 'demo@example.com', '+94 71 234 5678', 'O+', 'Colombo', NOW())";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$donor_id]);
+        
+        // Fetch again
+        $stmt = $db->prepare("SELECT * FROM donors WHERE donor_id = ?");
+        $stmt->execute([$donor_id]);
+        $donor = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+} catch (Exception $e) {
+    $donor = [
+        'name' => 'Demo User',
+        'email' => 'demo@example.com',
+        'phone' => '+94 71 234 5678',
+        'blood_type' => 'O+',
+        'district' => 'Colombo',
+        'registration_date' => date('Y-m-d')
+    ];
 }
-
-// ---------------- Fetch Donor Details ----------------
-$name = $email = $blood = $phone = $address = '';
-$stmt = $pdo->prepare("SELECT * FROM donors WHERE donor_id = :id LIMIT 1");
-$stmt->execute([':id' => $donor_id]);
-if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $name    = $row['name'];
-    $email   = $row['email'];
-    $blood   = $row['blood_type'];
-    $phone   = $row['phone'];
-    $address = $row['district'];
-}
-
 ?>
 
-<style>
-    .profile-container {
-        max-width: 500px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        padding: 30px 40px;
-        text-align: center;
-    }
+<div class="container">
+    <h1 class="page-title">Donor Profile</h1>
+    <p class="page-subtitle">Manage your donor information and view donation history</p>
 
-    .profile-pic {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 4px solid #e74c3c;
-        margin-bottom: 15px;
-    }
+    <?= $message ?>
 
-    .profile-form input[type="text"],
-    .profile-form input[type="email"] {
-        width: 100%;
-        padding: 10px 12px;
-        margin: 8px 0 16px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
+    <!-- Profile Summary -->
+    <div class="card">
+        <h2 class="card__title">Profile Summary</h2>
+        <div class="form-row">
+            <div>
+                <strong>Name:</strong> <?= htmlspecialchars($donor['name']) ?><br>
+                <strong>Email:</strong> <?= htmlspecialchars($donor['email']) ?><br>
+                <strong>Phone:</strong> <?= htmlspecialchars($donor['phone']) ?>
+            </div>
+            <div>
+                <strong>Blood Type:</strong> 
+                <span class="blood-type blood-type-<?= strtolower(str_replace('+', '-pos', str_replace('-', '-neg', $donor['blood_type']))) ?>">
+                    <?= htmlspecialchars($donor['blood_type']) ?>
+                </span><br>
+                <strong>District:</strong> <?= htmlspecialchars($donor['district']) ?><br>
+                <strong>Member Since:</strong> <?= date('M Y', strtotime($donor['registration_date'])) ?>
+            </div>
+        </div>
+    </div>
 
-    .profile-form label {
-        float: left;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
+    <!-- Update Profile -->
+    <div class="card">
+        <h2 class="card__title">Update Profile Information</h2>
+        <form method="POST" action="">
+            <input type="hidden" name="update_profile" value="1">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" class="form-control" name="name" id="name" required 
+                           value="<?= htmlspecialchars($donor['name']) ?>">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" class="form-control" name="email" id="email" required 
+                           value="<?= htmlspecialchars($donor['email']) ?>">
+                </div>
+            </div>
 
-    .profile-form .profile-btn {
-        background: #e74c3c;
-        color: #fff;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" class="form-control" name="phone" id="phone" required 
+                           value="<?= htmlspecialchars($donor['phone']) ?>" placeholder="+94 71 234 5678">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="blood_type">Blood Type</label>
+                    <select class="form-control" name="blood_type" id="blood_type" required>
+                        <option value="">Select Blood Type</option>
+                        <option value="A+" <?= $donor['blood_type'] === 'A+' ? 'selected' : '' ?>>A+</option>
+                        <option value="A-" <?= $donor['blood_type'] === 'A-' ? 'selected' : '' ?>>A-</option>
+                        <option value="B+" <?= $donor['blood_type'] === 'B+' ? 'selected' : '' ?>>B+</option>
+                        <option value="B-" <?= $donor['blood_type'] === 'B-' ? 'selected' : '' ?>>B-</option>
+                        <option value="AB+" <?= $donor['blood_type'] === 'AB+' ? 'selected' : '' ?>>AB+</option>
+                        <option value="AB-" <?= $donor['blood_type'] === 'AB-' ? 'selected' : '' ?>>AB-</option>
+                        <option value="O+" <?= $donor['blood_type'] === 'O+' ? 'selected' : '' ?>>O+</option>
+                        <option value="O-" <?= $donor['blood_type'] === 'O-' ? 'selected' : '' ?>>O-</option>
+                    </select>
+                </div>
+            </div>
 
-    .profile-form .profile-btn:hover {
-        background: #c0392b;
-    }
+            <div class="form-group">
+                <label class="form-label" for="district">District</label>
+                <select class="form-control" name="district" id="district" required>
+                    <option value="">Select District</option>
+                    <option value="Colombo" <?= $donor['district'] === 'Colombo' ? 'selected' : '' ?>>Colombo</option>
+                    <option value="Kandy" <?= $donor['district'] === 'Kandy' ? 'selected' : '' ?>>Kandy</option>
+                    <option value="Galle" <?= $donor['district'] === 'Galle' ? 'selected' : '' ?>>Galle</option>
+                    <option value="Jaffna" <?= $donor['district'] === 'Jaffna' ? 'selected' : '' ?>>Jaffna</option>
+                    <option value="Batticaloa" <?= $donor['district'] === 'Batticaloa' ? 'selected' : '' ?>>Batticaloa</option>
+                </select>
+            </div>
 
-    .profile-form .upload-label {
-        color: #e74c3c;
-        cursor: pointer;
-        font-weight: 500;
-        margin-bottom: 10px;
-        display: inline-block;
-    }
-</style>
+            <button type="submit" class="btn btn--primary">Update Profile</button>
+        </form>
+    </div>
 
-<div class="profile-container">
-    <h2>Donor Profile</h2>
-    <form class="profile-form" method="post" enctype="multipart/form-data">
-        <img src="<?php echo $profilePic; ?>" alt="Profile Picture" class="profile-pic"><br>
-        <label class="upload-label">
-            Change Photo
-            <input type="file" name="profile_pic" accept="image/*" style="display:none" onchange="this.form.submit()">
-        </label>
-        <br><br>
-        <label>Name</label>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($name); ?>" required>
-        <label>Email</label>
-        <input type="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
-        <label>Blood Group</label>
-        <input type="text" name="blood" value="<?php echo htmlspecialchars($blood); ?>" required>
-        <label>Phone</label>
-        <input type="text" name="phone" value="<?php echo htmlspecialchars($phone); ?>" required>
-        <label>Address</label>
-        <input type="text" name="address" value="<?php echo htmlspecialchars($address); ?>" required>
-        <br>
-        <button type="submit" class="profile-btn">Save Changes</button>
-    </form>
+    <!-- Donation History -->
+    <div class="card">
+        <h2 class="card__title">Donation History</h2>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Camp/Hospital</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Jan 15, 2025</td>
+                        <td>Colombo General Hospital</td>
+                        <td>Emergency Donation</td>
+                        <td><span class="blood-type blood-type-a-pos">Completed</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dec 10, 2024</td>
+                        <td>Red Cross Center</td>
+                        <td>Monthly Blood Drive</td>
+                        <td><span class="blood-type blood-type-a-pos">Completed</span></td>
+                    </tr>
+                    <tr>
+                        <td>Nov 05, 2024</td>
+                        <td>Community Center</td>
+                        <td>Local Blood Camp</td>
+                        <td><span class="blood-type blood-type-a-pos">Completed</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-center mt-2">
+            <small>Total donations: 3 | Last donation: 28 days ago</small>
+        </p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h2 class="card__title">Quick Actions</h2>
+        <div class="form-row">
+            <div class="text-center">
+                <h3>📍 Find Camps</h3>
+                <p>Locate upcoming blood donation camps near you</p>
+                <a href="camps.php" class="btn btn--primary">Browse Camps</a>
+            </div>
+            <div class="text-center">
+                <h3>🚨 Emergency</h3>
+                <p>Respond to urgent blood requests in your area</p>
+                <a href="emergency.php" class="btn btn--secondary">Emergency Requests</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php include 'includes/footer.php'; ?>

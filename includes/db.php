@@ -29,6 +29,7 @@ class Database {
     
     // PDO connection instance
     private static $connection = null;
+    private static $instance = null;
     
     /**
      * Private constructor to prevent direct instantiation
@@ -36,12 +37,24 @@ class Database {
     private function __construct() {}
     
     /**
+     * Get singleton instance of Database class
+     * 
+     * @return Database Database instance
+     */
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
      * Get database connection using PDO with security configurations
      * 
      * @return PDO Database connection object
      * @throws Exception If connection fails
      */
-    public static function getConnection() {
+    public function getConnection() {
         
         // Return existing connection if available
         if (self::$connection !== null) {
@@ -55,7 +68,10 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false,
                 
                 // Set default fetch mode to associative array
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                
+                // Set error mode to exceptions
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ];
             
             // Create DSN (Data Source Name)
@@ -63,9 +79,6 @@ class Database {
             
             // Create PDO connection
             self::$connection = new PDO($dsn, self::DB_USER, self::DB_PASS, $options);
-            
-            // Log successful connection (in production, consider removing this)
-            error_log("Database connection established successfully");
             
             return self::$connection;
             
@@ -79,12 +92,21 @@ class Database {
     }
     
     /**
+     * Static method to get database connection (for backward compatibility)
+     * 
+     * @return PDO Database connection object
+     * @throws Exception If connection fails
+     */
+    public static function getConnectionStatic() {
+        return self::getInstance()->getConnection();
+    }
+    
+    /**
      * Close database connection
      */
     public static function closeConnection() {
         self::$connection = null;
     }
-    
     
     /**
      * Sanitize input to prevent XSS attacks
@@ -102,65 +124,63 @@ class Database {
         return $input;
     }
     
-    
     /**
-     * Validate phone number (basic validation)
+     * Validate phone number format
      * 
      * @param string $phone Phone number to validate
-     * @return bool True if valid phone number, false otherwise
+     * @return bool True if valid, false otherwise
      */
     public static function validatePhone($phone) {
-        // Remove all non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
+        // Remove any non-digit characters for validation
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
         
-        // Check if phone number is between 10-15 digits
-        return strlen($phone) == 10;
+        // Check if it's a valid 10-digit Sri Lankan number
+        return strlen($cleanPhone) === 10 && preg_match('/^[0-9]{10}$/', $cleanPhone);
     }
-    
     
     /**
      * Test database connection
      * 
-     * @return bool True if connection is successful, false otherwise
+     * @return bool True if connection successful, false otherwise
      */
     public static function testConnection() {
         try {
-            $pdo = self::getConnection();
-            $stmt = $pdo->query("SELECT 1");
-            return $stmt !== false;
+            self::getInstance()->getConnection();
+            return true;
         } catch (Exception $e) {
-            error_log("Database connection test failed: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Execute a query with error handling
+     * 
+     * @param string $sql SQL query
+     * @param array $params Parameters for prepared statement
+     * @return PDOStatement|false
+     */
+    public static function executeQuery($sql, $params = []) {
+        try {
+            $db = self::getInstance()->getConnection();
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (Exception $e) {
+            error_log("Query execution failed: " . $e->getMessage());
             return false;
         }
     }
 }
 
-
-
 /**
- * Function to safely execute prepared statements
+ * Helper function for backward compatibility
  * 
- * @param string $query SQL query with placeholders
- * @param array $params Parameters for the query
- * @return PDOStatement|false Executed statement or false on failure
+ * @param string $sql SQL query
+ * @param array $params Parameters for prepared statement
+ * @return PDOStatement|false
  */
-function executeQuery($query, $params = []) {
-    try {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare($query);
-        
-        // Sanitize parameters
-        $sanitizedParams = [];
-        foreach ($params as $key => $value) {
-            $sanitizedParams[$key] = Database::sanitizeInput($value);
-        }
-        
-        $stmt->execute($sanitizedParams);
-        return $stmt;
-    } catch (PDOException $e) {
-        error_log("Query execution failed: " . $e->getMessage());
-        return false;
-    }
+function executeQuery($sql, $params = []) {
+    return Database::executeQuery($sql, $params);
 }
 
 ?>
