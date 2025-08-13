@@ -30,11 +30,24 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
     color: var(--gray-700);
     background: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 .container {
@@ -53,6 +66,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 2px solid var(--primary-light);
 }
 
 .header .container {
@@ -60,6 +74,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 1rem 20px;
+    max-width: 1200px;
 }
 
 .header__logo {
@@ -67,6 +82,15 @@ body {
     font-weight: bold;
     color: var(--primary);
     margin: 0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header__nav {
+    display: flex;
+    align-items: center;
 }
 
 .nav__list {
@@ -75,17 +99,26 @@ body {
     gap: 2rem;
     margin: 0;
     padding: 0;
+    align-items: center;
+}
+
+.nav__item {
+    margin: 0;
 }
 
 .nav__link {
     color: var(--gray-700);
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    position: relative;
 }
 
 .nav__link:hover {
     color: var(--primary);
+    background: var(--primary-light);
 }
 
 .header__mobile-toggle {
@@ -148,6 +181,53 @@ body {
     padding: 2rem 0;
 }
 
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.page-header__content {
+    flex: 1;
+    text-align: center;
+}
+
+.page-header__content h1 {
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.page-header > button:first-child {
+    flex-shrink: 0;
+}
+
+.page-header > a:last-child {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0 0.5rem;
+    }
+    
+    .page-header > * {
+        align-self: stretch;
+        text-align: center;
+    }
+}
+
 .page-title {
     font-size: 2rem;
     font-weight: bold;
@@ -199,7 +279,7 @@ body {
 .btn {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    border: none;
+    border: 1px solid transparent;
     border-radius: var(--radius);
     text-decoration: none;
     font-weight: 500;
@@ -207,11 +287,15 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     font-size: 1rem;
+    line-height: 1.2;
+    min-height: 44px;
+    box-sizing: border-box;
 }
 
 .btn--primary {
     background: var(--primary);
     color: var(--white);
+    border-color: var(--primary);
 }
 
 .btn--primary:hover {
@@ -237,14 +321,50 @@ body {
     background: var(--gray-50);
 }
 
+.btn--outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn--outline:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.btn--danger {
+    background: #ef4444;
+    color: var(--white);
+    border-color: #ef4444;
+}
+
+.btn--danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+.btn--outline.btn--danger {
+    background: var(--white);
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.btn--outline.btn--danger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #dc2626;
+}
+
 .btn--sm {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     font-size: 0.875rem;
+    min-height: 44px;
 }
 
 .btn--lg {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    min-height: 44px;
 }
 
 /* ==========================================================================
@@ -435,8 +555,8 @@ body {
 .footer {
     background: var(--gray-800);
     color: var(--white);
-    padding: 3rem 0 1rem;
-    margin-top: 3rem;
+    padding: 2rem 0 1rem;
+    margin-top: auto;
 }
 
 .footer__content {
@@ -484,18 +604,8 @@ body {
 .text-left { text-align: left; }
 .text-right { text-align: right; }
 
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
 .mb-3 { margin-bottom: 1.5rem; }
-.mb-4 { margin-bottom: 2rem; }
-
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
-.mt-4 { margin-top: 2rem; }
-
-.hidden { display: none; }
-.block { display: block; }
 
 /* ==========================================================================
    RESPONSIVE
