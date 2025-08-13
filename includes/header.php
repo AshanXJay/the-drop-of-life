@@ -36,3 +36,25 @@
         </nav>
     </div>
 </header>
+
+<script>
+// Mobile menu toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileToggle = document.querySelector('.header__mobile-toggle');
+    const navList = document.querySelector('.nav__list');
+    
+    if (mobileToggle && navList) {
+        mobileToggle.addEventListener('click', function() {
+            navList.classList.toggle('nav__list--mobile-active');
+        });
+        
+        // Close mobile menu when clicking on a nav link
+        const navLinks = document.querySelectorAll('.nav__link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                navList.classList.remove('nav__list--mobile-active');
+            });
+        });
+    }
+});
+</script>
