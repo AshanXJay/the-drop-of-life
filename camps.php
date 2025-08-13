@@ -116,7 +116,7 @@ try {
     </div>
 
     <!-- Error Message -->
-    <?php if (isset($error_message)): ?>
+    <?php if (!empty($error_message)): ?>
         <div class="alert alert--danger">
             <?= Database::escapeHtml($error_message) ?>
         </div>
